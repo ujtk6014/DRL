@@ -1,7 +1,32 @@
 import numpy as np
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
 import gym
 
+from JSAnimation.IPython_display import display_animation
+from matplotlib import animation
+from IPython.display import display
+
+
+def display_frames_as_gif(frames):
+
+    plt.figure(figsize=(frames[0].shape[1]/72.0, frames[0].shape[0]/72.0), dpi = 72)
+    patch = plt.imshow(frames[0])
+    plt.axis('off')
+
+
+    def animate(i):
+        patch.set_data(frames[i])
+
+    
+    anim = animation.FuncAnimation(plt.gcf(),animate, frames= len(frames), interval=50)
+
+    # anim.save('movie_cartpole.mp4')
+    anim.save('cartpole.gif', writer='pillow', fps=2)
+    display(display_animation(anim,default_mode='loop'))
+
+
+
+frames = []
 ENV = 'CartPole-v0'
 GAMMA = 0.99
 MAX_STEPS = 200
@@ -155,7 +180,8 @@ import copy
 class Environment:
     def run(self):
         '''メインの実行'''
-
+        episode_final = False 
+        frames = []
         # 同時実行する環境数分、envを生成
         envs = [gym.make(ENV) for i in range(NUM_PROCESSES)]
 
@@ -191,7 +217,6 @@ class Environment:
         for j in range(NUM_EPISODES*NUM_PROCESSES):  # 全体のforループ
             # advanced学習するstep数ごとに計算
             for step in range(NUM_ADVANCED_STEP):
-
                 # 行動を求める
                 with torch.no_grad():
                     action = actor_critic.act(rollouts.observations[step])
@@ -201,6 +226,9 @@ class Environment:
 
                 # 1stepの実行
                 for i in range(NUM_PROCESSES):
+                    if episode_final is True:  # 最終試行ではframesに各時刻の画像を追加していく
+                        frames.append(envs[i].render(mode='rgb_array'))
+
                     obs_np[i], reward_np[i], done_np[i], _ = envs[i].step(
                         actions[i])
 
@@ -267,11 +295,15 @@ class Environment:
             # ネットワークとrolloutの更新
             global_brain.update(rollouts)
             rollouts.after_update()
-
+            
+            if episode_final is True:
+                            display_frames_as_gif(frames)
+                            break
+                        
             # 全部のNUM_PROCESSESが200step経ち続けたら成功
             if final_rewards.sum().numpy() >= NUM_PROCESSES:
                 print('連続成功')
-                break
+                episode_final = True
 
 cartpole_env = Environment()                                         
 cartpole_env.run()
