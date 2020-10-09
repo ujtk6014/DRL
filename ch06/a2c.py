@@ -14,17 +14,21 @@ value_loss_coef = 0.5
 entropy_coef = 0.01
 max_grad_norm = 0.5
 
-
+# メモリクラスの定義
 class RolloutStorage(object):
+    '''Advantage学習するためのメモリクラスです'''
+
     def __init__(self, num_steps, num_processes, obs_shape):
+
         self.observations = torch.zeros(num_steps + 1, num_processes, 4)
         self.masks = torch.ones(num_steps + 1, num_processes, 1)
-        self.rewards = torch.zeros(num_steps,num_processes, 1)
+        self.rewards = torch.zeros(num_steps, num_processes, 1)
         self.actions = torch.zeros(num_steps, num_processes, 1).long()
 
+        # 割引報酬和を格納
         self.returns = torch.zeros(num_steps + 1, num_processes, 1)
-        self.index = 0
-        
+        self.index = 0  # insertするインデックス
+
     def insert(self, current_obs, action, reward, mask):
         '''次のindexにtransitionを格納する'''
         self.observations[self.index + 1].copy_(current_obs)
@@ -47,8 +51,7 @@ class RolloutStorage(object):
         self.returns[-1] = next_value
         for ad_step in reversed(range(self.rewards.size(0))):
             self.returns[ad_step] = self.returns[ad_step + 1] * \
-                GAMMA * self.masks[ad_step + 1] + self.returns[ad_step]
-
+                GAMMA * self.masks[ad_step + 1] + self.rewards[ad_step]
 
 import torch.nn as nn
 import torch.nn.functional as F
