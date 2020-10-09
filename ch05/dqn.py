@@ -103,6 +103,8 @@ class Brain:
         # -----------------------------------------
         # 2.1 メモリからミニバッチ分のデータを取り出す
         transitions = self.memory.sample(BATCH_SIZE)
+        # print([len(v) for v in transitions])
+        # print(transitions)
 
         # 2.2 各変数をミニバッチに対応する形に変形
         # transitionsは1stepごとの(state, action, state_next, reward)が、BATCH_SIZE分格納されている
@@ -110,7 +112,9 @@ class Brain:
         # これをミニバッチにしたい。つまり
         # (state×BATCH_SIZE, action×BATCH_SIZE, state_next×BATCH_SIZE, reward×BATCH_SIZE)にする
         batch = Transition(*zip(*transitions))
-        
+        # bat = np.array(batch)
+        # print(bat.shape)
+        # print([len(v) for v in bat])
         # 2.3 各変数の要素をミニバッチに対応する形に変形し、ネットワークで扱えるようVariableにする
         # 例えばstateの場合、[torch.FloatTensor of size 1x4]がBATCH_SIZE分並んでいるのですが、
         # それを torch.FloatTensor of size BATCH_SIZEx4 に変換します
