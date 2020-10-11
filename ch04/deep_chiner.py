@@ -69,6 +69,10 @@ def train(epoch):
     for data, targets in loader_train:
         optimizer.zero_grad()
         outputs = model(data)
+        print(outputs.shape)
+        print(targets.shape)
+        print('\n')
+
         loss = loss_fn(outputs, targets)
 
         loss.backward()

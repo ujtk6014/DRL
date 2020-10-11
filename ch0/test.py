@@ -7,3 +7,4 @@ for i in range(100):
     env.render()    # Cartpoleのアニメーション
     observation, reward, done, info = env.step(env.action_space.sample())  # カートを動かし、その結果を返す
     print("Step:",i,done,"Reward:",reward,"Obs:",observation)
+    
